@@ -1,4 +1,4 @@
---// 🔥 AutoFarm Mihawk + SJW + AutoZoom Camera (Check SJW every 10s) 🔥
+--// 🔥 AutoFarm Mihawk + SJW + AutoZoom Camera (Check SJW every 10s) 🔥🥶
 
 local player = game:GetService("Players").LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
