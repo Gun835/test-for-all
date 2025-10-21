@@ -218,3 +218,38 @@ task.delay(2, function()
 	ToggleAutoFarm(true)
 	EnableAutoZoom(true)
 end)
+--===[ ฟังก์ชันหยุดทุกอย่าง ]===--
+local function StopAll()
+    -- ปิด AutoFarm
+    if getgenv().AutoFarmMihawk then
+        getgenv().AutoFarmMihawk = false
+    end
+
+    -- ปิด AutoZoom
+    if getgenv().AutoZoom then
+        getgenv().AutoZoom = false
+        -- Reset กล้อง
+        if workspace.CurrentCamera then
+            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        end
+    end
+
+    -- ปิด gx flag (ถ้าใช้ใน loop อื่น)
+    if getgenv().gx then
+        getgenv().gx = false
+    end
+
+    -- Disconnect AutoZoom loop ถ้ามี
+    if autoZoomConn then
+        autoZoomConn:Disconnect()
+        autoZoomConn = nil
+    end
+
+    -- ล้าง SJW ล่าสุด
+    latestSJW = nil
+
+    print("✅ ทุกฟังก์ชันหยุดเรียบร้อยแล้ว")
+end
+
+-- เรียกใช้งาน
+StopAll()
