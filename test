@@ -1,4 +1,4 @@
---// 🔥 AutoFarm Mihawk + SJW + AutoZoom + Slayer's Trainee (Lock System) 🔥
+--// 🔥 AutoFarm Mihawk + SJW + AutoZoom + Slayer's Trainee 🔥
 
 local player = game:GetService("Players").LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
@@ -7,7 +7,7 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Serversi
 local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
 
---===[ 🌙 สร้าง UI ]===--
+--===[ 🌙 UI หลัก ]===--
 local gui = Instance.new("ScreenGui")
 gui.Name = "FarmControlUI"
 gui.ResetOnSpawn = false
@@ -70,7 +70,7 @@ getgenv().AutoSlayerTrainee = false
 getgenv().gx = true
 getgenv().AutoZoom = true
 
---===[ ฟังก์ชันปรับสถานะปุ่ม ]===--
+--===[ ฟังก์ชันเปลี่ยนสถานะปุ่ม ]===--
 local function updateButton(button, state, onText, offText)
 	if state then
 		button.Text = onText
@@ -117,7 +117,7 @@ zoomButton.MouseButton1Click:Connect(function()
 	EnableAutoZoom(not getgenv().AutoZoom)
 end)
 
---===[ ปรับ HoldDuration ของ ProximityPrompt ]===--
+--===[ ProximityPrompt ปรับ HoldDuration = 0 ]===--
 for _, obj in pairs(workspace:GetDescendants()) do
 	if obj:IsA("ProximityPrompt") then obj.HoldDuration = 0 end
 end
@@ -147,52 +147,24 @@ task.spawn(function()
 	end
 end)
 
---===[ ฟังก์ชันโจมตีมอน ]===--
 local function AttackBoss(bossModel)
 	local char, hrp = waitForCharacter()
 	local Mon = bossModel:FindFirstChild("HumanoidRootPart")
 	local hum = bossModel:FindFirstChild("Humanoid")
-	if not (Mon and hum and hum.Health > 0) then return false end
 
-	-- 🔒 ฟาร์มพิเศษ Slayer's Trainee
-	if bossModel.Name == "Slayer's Trainee" then
-		local humanoid = char:FindFirstChild("Humanoid")
-		if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Physics) end
-		hrp.Anchored = true
-
-		task.spawn(function()
-			while hum and hum.Health > 0 and getgenv().AutoSlayerTrainee do
-				pcall(function()
-					if Mon and hrp then
-						Mon.CFrame = hrp.CFrame * CFrame.new(0, 0, -5)
-					end
-					Remotes:FireServer("Server", "Sword", "M1s", "Dual Dagger", 1)
-					for i = 1, 4 do
-						task.wait(0.15)
-						Remotes:FireServer("Server", "Sword", "Skill"..i, "Dual Dagger")
-					end
-				end)
-				task.wait(0.2)
-			end
-		end)
-
-		repeat task.wait(0.3) until not hum or hum.Health <= 0 or not getgenv().AutoSlayerTrainee
-		hrp.Anchored = false
-		if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end
+	if Mon and hum and hum.Health > 0 then
+		hrp.CFrame = Mon.CFrame * CFrame.new(0, 0, 5)
+		Remotes:FireServer("Server", "Sword", "M1s", "Dual Dagger", 1)
+		for i = 1, 4 do
+			task.wait(0.2)
+			Remotes:FireServer("Server", "Sword", "Skill"..i, "Dual Dagger")
+		end
 		return true
 	end
-
-	-- 💥 มอนทั่วไป (Mihawk, SJW)
-	hrp.CFrame = Mon.CFrame * CFrame.new(0, 0, 5)
-	Remotes:FireServer("Server", "Sword", "M1s", "Dual Dagger", 1)
-	for i = 1,4 do
-		task.wait(0.2)
-		Remotes:FireServer("Server", "Sword", "Skill"..i, "Dual Dagger")
-	end
-	return true
+	return false
 end
 
---===[ จุดวาร์ปกลับแต่ละเควส ]===--
+--===[ จุดวาร์ปกลับ ]===--
 local deathPositionMihawk = CFrame.new(-30.7399998, 2.22399998, 156.429993, 0.983286619, 0, 0.182064503, 0, 1, 0, -0.182064503, 0, 0.983286619)
 local questPositionSlayer = CFrame.new(-500.550995, 11.1639996, 511.187012, -0.636166334, 0, -0.771551907, 0, 1, 0, 0.771551907, 0, -0.636166334)
 
@@ -212,7 +184,7 @@ task.spawn(function()
 	end
 end)
 
---===[ ฟาร์ม Mihawk ]===--
+--===[ Loop ฟาร์ม Mihawk ]===--
 task.spawn(function()
 	while true do
 		if getgenv().AutoFarmMihawk and getgenv().gx then
@@ -220,6 +192,7 @@ task.spawn(function()
 				local char, hrp = waitForCharacter()
 				local mihawk = workspace.Main.Characters["Glacier Isle"].Mihawk:FindFirstChild("Mihawk")
 				local sjwBoss = latestSJW
+
 				if sjwBoss then
 					AttackBoss(sjwBoss)
 				elseif mihawk and mihawk:FindFirstChild("Humanoid") and mihawk.Humanoid.Health > 0 then
@@ -233,7 +206,7 @@ task.spawn(function()
 	end
 end)
 
---===[ ฟาร์ม Slayer's Trainee ]===--
+--===[ Loop ฟาร์ม Slayer's Trainee ]===--
 task.spawn(function()
 	while true do
 		if getgenv().AutoSlayerTrainee and getgenv().gx then
