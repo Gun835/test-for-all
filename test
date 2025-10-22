@@ -1,4 +1,4 @@
---// 🔥 AutoFarm All Bosses + AutoZoom + Haki + Farm Control Expand 🔥
+--// 🔥 AutoFarm All Bosses + AutoZoom + Haki 🔥
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -34,18 +34,7 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = gui
 
---===[ Farm Control Title (กดเพื่อเลื่อนปุ่ม) ]===
-local title = Instance.new("TextButton")
-title.Size = UDim2.new(1,0,0,30)
-title.BackgroundTransparency = 1
-title.Text = "⚙️ Farm Control"
-title.TextColor3 = Color3.new(1,1,1)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
-title.Parent = frame
-title.TextButtonExpand = false -- สถานะพับ/ขยาย
-
---===[ ฟังก์ชันสร้างปุ่ม ]===
+--===[ สร้างปุ่ม ]===
 local function createButton(text,pos)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0.9,0,0,35)
@@ -63,16 +52,6 @@ local toggleMihawk = createButton("🔴 Auto Mihawk : OFF",UDim2.new(0.05,0,0.2,
 local toggleSlayer = createButton("🔴 Auto Slayer's Trainee : OFF",UDim2.new(0.05,0,0.45,0))
 local toggleTanjiro = createButton("🔴 Auto Tanjiro : OFF",UDim2.new(0.05,0,0.7,0))
 local zoomButton = createButton("🔴 AutoZoom : OFF",UDim2.new(0.05,0,0.85,0))
-
---===[ เลื่อน/พับปุ่มเมื่อกด title ]===
-title.MouseButton1Click:Connect(function()
-	local targetOffset = title.TextButtonExpand and {0.2,0.45,0.7,0.85} or {0.35,0.6,0.75,0.9}
-	local buttons = {toggleMihawk,toggleSlayer,toggleTanjiro,zoomButton}
-	for i,btn in pairs(buttons) do
-		btn:TweenPosition(UDim2.new(0.05,0,targetOffset[i],0),"Out","Quad",0.3,true)
-	end
-	title.TextButtonExpand = not title.TextButtonExpand
-end)
 
 --===[ ฟังก์ชันอัปเดตปุ่ม ]===
 local function updateButton(button,state,onText,offText)
@@ -157,10 +136,20 @@ local function AttackBoss(bossModel)
 	local Mon = bossModel:FindFirstChild("HumanoidRootPart")
 	local hum = bossModel:FindFirstChild("Humanoid")
 	if Mon and hum and hum.Health>0 then
-		hrp.CFrame = Mon.CFrame * CFrame.new(0,0,5)
-		for i=1,4 do
-			Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
-			task.wait(0.2)
+		if bossModel.Name == "Slayer's Trainee" then
+			-- ดึงมอนมาไว้หน้าเรา (ไม่แช่)
+			Mon.CFrame = hrp.CFrame * CFrame.new(0,0,5)
+			for i = 1,4 do
+				Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
+				task.wait(0.2)
+			end
+		else
+			-- บอสอื่น ๆ ใช้แบบเดิม
+			hrp.CFrame = Mon.CFrame * CFrame.new(0,0,5)
+			for i = 1,4 do
+				Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
+				task.wait(0.2)
+			end
 		end
 		return true
 	end
@@ -215,38 +204,14 @@ task.spawn(function()
 				local char,hrp = waitForCharacter()
 				local slayerArea = workspace.Main.Characters["Forge Isle"]["Slayer's Trainee"]
 				if slayerArea then
-					for _,slayer in pairs(slayerArea:GetChildren()) do
+					for _, slayer in pairs(slayerArea:GetChildren()) do
 						if slayer.Name=="Slayer's Trainee" and slayer:FindFirstChild("Humanoid") and slayer.Humanoid.Health>0 then
 							AttackBoss(slayer)
 							return
 						end
 					end
 				end
-				hrp.CFrame = questPositionSlayer
+				-- ไม่ต้องวาปกลับจุดเควสตอนตี Slayer's Trainee
 			end)
 		end
-		task.wait(0.4)
-	end
-end)
-
---===[ Loop AutoFarm Tanjiro ]===
-task.spawn(function()
-	while true do
-		if getgenv().AutoTanjiro and getgenv().gx then
-			pcall(function()
-				local char,hrp = waitForCharacter()
-				local bossFolder = workspace.Main.Characters["Forge Isle"]:FindFirstChild("Boss")
-				if bossFolder then
-					for _,tanjiro in pairs(bossFolder:GetChildren()) do
-						if tanjiro.Name=="Tanjiro" and tanjiro:FindFirstChild("Humanoid") and tanjiro.Humanoid.Health>0 then
-							AttackBoss(tanjiro)
-							return
-						end
-					end
-				end
-				hrp.CFrame = questPositionTanjiro
-			end)
-		end
-		task.wait(0.4)
-	end
-end)
+		task.wait(
