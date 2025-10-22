@@ -1,4 +1,4 @@
---// 🔥 AutoFarm All Bosses + UI Toggle G + AutoZoom + Haki 🔥
+--// 🔥 AutoFarm All Bosses + AutoZoom + Haki + Farm Control Expand 🔥
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -10,12 +10,14 @@ local camera = workspace.CurrentCamera
 --===[ ตัวแปรสถานะ ]===
 getgenv().AutoFarmMihawk = false
 getgenv().AutoSlayerTrainee = false
+getgenv().AutoTanjiro = false
 getgenv().AutoZoom = true
 getgenv().gx = true
 
 --===[ จุดวาร์ป ]===
 local deathPositionMihawk = CFrame.new(-30.7399998,2.22399998,156.429993,0.983286619,0,0.182064503,0,1,0,-0.182064503,0,0.983286619)
 local questPositionSlayer = CFrame.new(-500.550995,11.1639996,511.187012,-0.636166334,0,-0.771551907,0,1,0,0.771551907,0,-0.636166334)
+local questPositionTanjiro = CFrame.new(-533.615845,11.164134,535.633545,0.766061246,0,-0.642767608,0,1,0,0.642767608,0,0.766061246)
 
 --===[ สร้าง UI หลัก ]===
 local gui = Instance.new("ScreenGui")
@@ -32,7 +34,8 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = gui
 
-local title = Instance.new("TextLabel")
+--===[ Farm Control Title (กดเพื่อเลื่อนปุ่ม) ]===
+local title = Instance.new("TextButton")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
 title.Text = "⚙️ Farm Control"
@@ -40,8 +43,9 @@ title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
+title.TextButtonExpand = false -- สถานะพับ/ขยาย
 
--- ฟังก์ชันสร้างปุ่ม
+--===[ ฟังก์ชันสร้างปุ่ม ]===
 local function createButton(text,pos)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0.9,0,0,35)
@@ -57,24 +61,17 @@ end
 
 local toggleMihawk = createButton("🔴 Auto Mihawk : OFF",UDim2.new(0.05,0,0.2,0))
 local toggleSlayer = createButton("🔴 Auto Slayer's Trainee : OFF",UDim2.new(0.05,0,0.45,0))
-local zoomButton = createButton("🔴 AutoZoom : OFF",UDim2.new(0.05,0,0.7,0))
+local toggleTanjiro = createButton("🔴 Auto Tanjiro : OFF",UDim2.new(0.05,0,0.7,0))
+local zoomButton = createButton("🔴 AutoZoom : OFF",UDim2.new(0.05,0,0.85,0))
 
---===[ ปุ่ม Toggle UI ตัว G ขนาดกลาง ]===
-local toggleUIBtn = Instance.new("TextButton")
-toggleUIBtn.Size = UDim2.new(0,60,0,40) -- ขนาดกลาง
-toggleUIBtn.Position = UDim2.new(0.01,0,0.9,0) -- มุมล่างซ้าย
-toggleUIBtn.BackgroundColor3 = Color3.fromRGB(0,120,255)
-toggleUIBtn.TextColor3 = Color3.new(1,1,1)
-toggleUIBtn.Font = Enum.Font.SourceSansBold
-toggleUIBtn.TextSize = 24
-toggleUIBtn.Text = "G"
-toggleUIBtn.Parent = PlayerGui
-
-local uiVisible = true
-toggleUIBtn.MouseButton1Click:Connect(function()
-	uiVisible = not uiVisible
-	local gui = PlayerGui:FindFirstChild("FarmControlUI")
-	if gui then gui.Enabled = uiVisible end
+--===[ เลื่อน/พับปุ่มเมื่อกด title ]===
+title.MouseButton1Click:Connect(function()
+	local targetOffset = title.TextButtonExpand and {0.2,0.45,0.7,0.85} or {0.35,0.6,0.75,0.9}
+	local buttons = {toggleMihawk,toggleSlayer,toggleTanjiro,zoomButton}
+	for i,btn in pairs(buttons) do
+		btn:TweenPosition(UDim2.new(0.05,0,targetOffset[i],0),"Out","Quad",0.3,true)
+	end
+	title.TextButtonExpand = not title.TextButtonExpand
 end)
 
 --===[ ฟังก์ชันอัปเดตปุ่ม ]===
@@ -88,21 +85,27 @@ local function updateButton(button,state,onText,offText)
 	end
 end
 
+--===[ ปุ่ม AutoFarm ]===
 toggleMihawk.MouseButton1Click:Connect(function()
 	getgenv().AutoFarmMihawk = not getgenv().AutoFarmMihawk
 	updateButton(toggleMihawk,getgenv().AutoFarmMihawk,"🟢 Auto Mihawk : ON","🔴 Auto Mihawk : OFF")
 end)
-
 toggleSlayer.MouseButton1Click:Connect(function()
 	getgenv().AutoSlayerTrainee = not getgenv().AutoSlayerTrainee
 	updateButton(toggleSlayer,getgenv().AutoSlayerTrainee,"🟢 Auto Slayer's Trainee : ON","🔴 Auto Slayer's Trainee : OFF")
+end)
+toggleTanjiro.MouseButton1Click:Connect(function()
+	getgenv().AutoTanjiro = not getgenv().AutoTanjiro
+	updateButton(toggleTanjiro,getgenv().AutoTanjiro,"🟢 Auto Tanjiro : ON","🔴 Auto Tanjiro : OFF")
+end)
+zoomButton.MouseButton1Click:Connect(function()
+	getgenv().AutoZoom = not getgenv().AutoZoom
+	updateButton(zoomButton,getgenv().AutoZoom,"🟢 AutoZoom : ON","🔴 AutoZoom : OFF")
 end)
 
 --===[ AutoZoom ]===
 local autoZoomConn
 local function EnableAutoZoom(state)
-	getgenv().AutoZoom = state
-	updateButton(zoomButton,state,"🟢 AutoZoom : ON","🔴 AutoZoom : OFF")
 	if state then
 		autoZoomConn = RunService.RenderStepped:Connect(function()
 			if not getgenv().AutoZoom then return end
@@ -118,9 +121,7 @@ local function EnableAutoZoom(state)
 		if autoZoomConn then autoZoomConn:Disconnect() autoZoomConn=nil end
 	end
 end
-zoomButton.MouseButton1Click:Connect(function()
-	EnableAutoZoom(not getgenv().AutoZoom)
-end)
+EnableAutoZoom(getgenv().AutoZoom)
 
 --===[ ProximityPrompt ปรับ HoldDuration = 0 ]===
 for _,obj in pairs(workspace:GetDescendants()) do
@@ -132,7 +133,6 @@ local HakiArgs = {"Server","Misc","Haki",1}
 local function ActivateHaki()
 	pcall(function() Remotes:FireServer(unpack(HakiArgs)) end)
 end
-
 local function waitForCharacter()
 	local char,hrp,humanoid
 	repeat
@@ -143,7 +143,6 @@ local function waitForCharacter()
 	until hrp and humanoid and humanoid.Health>0
 	return char,hrp,humanoid
 end
-
 task.spawn(function()
 	while true do
 		local _,_,hum = waitForCharacter()
@@ -158,7 +157,7 @@ local function AttackBoss(bossModel)
 	local Mon = bossModel:FindFirstChild("HumanoidRootPart")
 	local hum = bossModel:FindFirstChild("Humanoid")
 	if Mon and hum and hum.Health>0 then
-		hrp.CFrame = Mon.CFrame * CFrame.new(0,10,10)
+		hrp.CFrame = Mon.CFrame * CFrame.new(0,0,5)
 		for i=1,4 do
 			Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
 			task.wait(0.2)
@@ -186,7 +185,7 @@ task.spawn(function()
 	end
 end)
 
---===[ AutoFarm Mihawk + SJW ]===
+--===[ Loop AutoFarm Mihawk + SJW ]===
 task.spawn(function()
 	while true do
 		if getgenv().AutoFarmMihawk and getgenv().gx then
@@ -208,20 +207,44 @@ task.spawn(function()
 	end
 end)
 
---===[ AutoFarm Slayer's Trainee ]===
+--===[ Loop AutoFarm Slayer's Trainee ]===
 task.spawn(function()
 	while true do
 		if getgenv().AutoSlayerTrainee and getgenv().gx then
 			pcall(function()
 				local char,hrp = waitForCharacter()
-				local slayerArea = workspace.Main.Characters["Forge Isle"]:FindFirstChild("Slayer's Trainee")
+				local slayerArea = workspace.Main.Characters["Forge Isle"]["Slayer's Trainee"]
 				if slayerArea then
 					for _,slayer in pairs(slayerArea:GetChildren()) do
 						if slayer.Name=="Slayer's Trainee" and slayer:FindFirstChild("Humanoid") and slayer.Humanoid.Health>0 then
 							AttackBoss(slayer)
+							return
 						end
 					end
 				end
+				hrp.CFrame = questPositionSlayer
+			end)
+		end
+		task.wait(0.4)
+	end
+end)
+
+--===[ Loop AutoFarm Tanjiro ]===
+task.spawn(function()
+	while true do
+		if getgenv().AutoTanjiro and getgenv().gx then
+			pcall(function()
+				local char,hrp = waitForCharacter()
+				local bossFolder = workspace.Main.Characters["Forge Isle"]:FindFirstChild("Boss")
+				if bossFolder then
+					for _,tanjiro in pairs(bossFolder:GetChildren()) do
+						if tanjiro.Name=="Tanjiro" and tanjiro:FindFirstChild("Humanoid") and tanjiro.Humanoid.Health>0 then
+							AttackBoss(tanjiro)
+							return
+						end
+					end
+				end
+				hrp.CFrame = questPositionTanjiro
 			end)
 		end
 		task.wait(0.4)
