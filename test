@@ -1,1 +1,199 @@
+--// 🔥 AutoFarm Mihawk + SJW + AutoZoom (UI ใหม่) 🔥
+--// by กัน
 
+local player = game:GetService("Players").LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Serverside")
+local runService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+--===[ UI Setup ใหม่ ]===--
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "FarmControlUI"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 110)
+frame.Position = UDim2.new(0.8, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BackgroundTransparency = 0.1
+frame.Active = true
+frame.Draggable = true
+
+local function makeButton(name, order)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.new(1, -20, 0, 40)
+	btn.Position = UDim2.new(0, 10, 0, (order - 1) * 50 + 10)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 16
+	btn.Text = name
+	btn.AutoButtonColor = true
+	btn.BorderSizePixel = 0
+	return btn
+end
+
+local autoFarmBtn = makeButton("AutoFarm 🔴", 1)
+local autoZoomBtn = makeButton("AutoZoom 🔴", 2)
+
+--===[ ตัวแปรสถานะ ]===--
+getgenv().AutoFarmMihawk = false
+getgenv().AutoZoom = true -- เปิด AutoZoom อัตโนมัติ
+getgenv().gx = true
+
+--===[ ปรับ ProximityPrompt ]===--
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("ProximityPrompt") then
+		obj.HoldDuration = 0
+	end
+end
+
+--===[ ฟังก์ชัน Toggle AutoFarm ]===--
+local function ToggleAutoFarm(state)
+	getgenv().AutoFarmMihawk = state
+	if state then
+		autoFarmBtn.Text = "AutoFarm 🟢"
+		autoFarmBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
+	else
+		autoFarmBtn.Text = "AutoFarm 🔴"
+		autoFarmBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	end
+end
+
+autoFarmBtn.MouseButton1Click:Connect(function()
+	ToggleAutoFarm(not getgenv().AutoFarmMihawk)
+end)
+
+--===[ ฟังก์ชัน AutoZoom ]===--
+local autoZoomConn
+local function EnableAutoZoom(state)
+	getgenv().AutoZoom = state
+	if state then
+		autoZoomBtn.Text = "AutoZoom 🟢"
+		autoZoomBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
+
+		autoZoomConn = runService.RenderStepped:Connect(function()
+			if not getgenv().AutoZoom then return end
+			local char = player.Character or player.CharacterAdded:Wait()
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			if not hrp then return end
+
+			camera.CameraType = Enum.CameraType.Scriptable
+			local maxZoom = player.CameraMaxZoomDistance or 128
+			local zoom = math.min(maxZoom, 100)
+			camera.CFrame = hrp.CFrame * CFrame.new(0, zoom, 0) * CFrame.Angles(math.rad(-90),0,0)
+		end)
+	else
+		autoZoomBtn.Text = "AutoZoom 🔴"
+		autoZoomBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+		camera.CameraType = Enum.CameraType.Custom
+		if autoZoomConn then
+			autoZoomConn:Disconnect()
+			autoZoomConn = nil
+		end
+	end
+end
+
+autoZoomBtn.MouseButton1Click:Connect(function()
+	EnableAutoZoom(not getgenv().AutoZoom)
+end)
+
+--===[ ฟังก์ชันอื่นๆ ระบบฟาร์ม Mihawk + SJW ]===--
+local HakiArgs = {"Server","Misc","Haki",1}
+
+local function ActivateHaki()
+	pcall(function()
+		Remotes:FireServer(unpack(HakiArgs))
+	end)
+end
+
+local function waitForCharacter()
+	local char, hrp, humanoid
+	repeat
+		char = player.Character or player.CharacterAdded:Wait()
+		hrp = char:FindFirstChild("HumanoidRootPart")
+		humanoid = char:FindFirstChild("Humanoid")
+		task.wait(0.1)
+	until hrp and humanoid and humanoid.Health > 0
+	return char, hrp, humanoid
+end
+
+-- Auto Haki loop
+task.spawn(function()
+	while true do
+		local _, _, humanoid = waitForCharacter()
+		if humanoid and humanoid.Health > 0 then
+			ActivateHaki()
+		end
+		task.wait(1)
+	end
+end)
+
+-- จุดวาร์ปกลับ
+local deathPosition = CFrame.new(-30.7399998, 2.22399998, 156.429993)
+
+local function AttackBoss(bossModel)
+	local char, hrp = waitForCharacter()
+	local Mon = bossModel:FindFirstChild("HumanoidRootPart")
+	local hum = bossModel:FindFirstChild("Humanoid")
+
+	if Mon and hum and hum.Health > 0 then
+		hrp.CFrame = Mon.CFrame * CFrame.new(0,0,5)
+		Remotes:FireServer("Server","Sword","M1s","Dual Dagger",1)
+		task.wait(0.2)
+		for i=1,4 do
+			Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
+			task.wait(0.2)
+		end
+		return true
+	end
+	return false
+end
+
+-- ระบบตรวจ SJW ทุก 10 วิ
+local latestSJW = nil
+task.spawn(function()
+	while true do
+		local sjwArea = workspace.Main.Characters:FindFirstChild("Rogue Town")
+		local sjwBossFolder = sjwArea and sjwArea:FindFirstChild("Boss")
+		local sjw = sjwBossFolder and sjwBossFolder:FindFirstChild("Sung Jin Woo")
+
+		if sjw and sjw:FindFirstChild("Humanoid") and sjw.Humanoid.Health > 0 then
+			latestSJW = sjw
+		else
+			latestSJW = nil
+		end
+
+		task.wait(10)
+	end
+end)
+
+-- ระบบ AutoFarm หลัก
+task.spawn(function()
+	while true do
+		if getgenv().AutoFarmMihawk and getgenv().gx then
+			pcall(function()
+				local char, hrp = waitForCharacter()
+				local mihawk = workspace.Main.Characters["Glacier Isle"].Mihawk:FindFirstChild("Mihawk")
+				local sjwBoss = latestSJW
+
+				if sjwBoss then
+					AttackBoss(sjwBoss)
+				elseif mihawk and mihawk:FindFirstChild("Humanoid") and mihawk.Humanoid.Health > 0 then
+					AttackBoss(mihawk)
+				else
+					hrp.CFrame = deathPosition
+				end
+			end)
+		end
+		task.wait(0.4)
+	end
+end)
+
+-- เปิด AutoFarm + AutoZoom ตอนเริ่มต้น
+task.delay(2, function()
+	ToggleAutoFarm(true)
+	EnableAutoZoom(true)
+end)
