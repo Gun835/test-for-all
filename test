@@ -1,7 +1,4 @@
---// 🔥 AutoFarm Mihawk + SJW + Slayer's Trainee + AutoZoom + Haki 🔥
---// เวอร์ชัน: 2025-10-22 | รวมระบบทั้งหมด
-
--- Services
+--// 🔥 AutoFarm All Bosses + UI Toggle G + AutoZoom + Haki 🔥
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -10,26 +7,26 @@ local PlayerGui = player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Serverside")
 local camera = workspace.CurrentCamera
 
---===[ ตัวแปรสถานะ ]===--
+--===[ ตัวแปรสถานะ ]===
 getgenv().AutoFarmMihawk = false
 getgenv().AutoSlayerTrainee = false
 getgenv().AutoZoom = true
 getgenv().gx = true
 
---===[ จุดวาร์ปกลับ / จุดเควส Slayer ]===--
-local deathPositionMihawk = CFrame.new(-30.7399998, 2.22399998, 156.429993, 0.983286619, 0, 0.182064503, 0, 1, 0, -0.182064503, 0, 0.983286619)
-local questPositionSlayer = CFrame.new(-500.550995, 11.1639996, 511.187012, -0.636166334, 0, -0.771551907, 0, 1, 0, 0.771551907, 0, -0.636166334)
+--===[ จุดวาร์ป ]===
+local deathPositionMihawk = CFrame.new(-30.7399998,2.22399998,156.429993,0.983286619,0,0.182064503,0,1,0,-0.182064503,0,0.983286619)
+local questPositionSlayer = CFrame.new(-500.550995,11.1639996,511.187012,-0.636166334,0,-0.771551907,0,1,0,0.771551907,0,-0.636166334)
 
---===[ สร้าง UI ]===--
+--===[ สร้าง UI หลัก ]===
 local gui = Instance.new("ScreenGui")
 gui.Name = "FarmControlUI"
 gui.ResetOnSpawn = false
 gui.Parent = PlayerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 230, 0, 200)
-frame.Position = UDim2.new(0.5, -115, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Size = UDim2.new(0,230,0,200)
+frame.Position = UDim2.new(0.5,-115,0.1,0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 frame.BackgroundTransparency = 0.2
 frame.Active = true
 frame.Draggable = true
@@ -44,8 +41,8 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
 
--- ปุ่ม
-local function createButton(text, pos)
+-- ฟังก์ชันสร้างปุ่ม
+local function createButton(text,pos)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0.9,0,0,35)
 	btn.Position = pos
@@ -58,12 +55,30 @@ local function createButton(text, pos)
 	return btn
 end
 
-local toggleMihawk = createButton("🔴 Auto Mihawk : OFF", UDim2.new(0.05,0,0.2,0))
-local toggleSlayer = createButton("🔴 Auto Slayer's Trainee : OFF", UDim2.new(0.05,0,0.45,0))
-local zoomButton = createButton("🔴 AutoZoom : OFF", UDim2.new(0.05,0,0.7,0))
+local toggleMihawk = createButton("🔴 Auto Mihawk : OFF",UDim2.new(0.05,0,0.2,0))
+local toggleSlayer = createButton("🔴 Auto Slayer's Trainee : OFF",UDim2.new(0.05,0,0.45,0))
+local zoomButton = createButton("🔴 AutoZoom : OFF",UDim2.new(0.05,0,0.7,0))
 
---===[ ฟังก์ชันอัปเดตปุ่ม ]===--
-local function updateButton(button, state, onText, offText)
+--===[ ปุ่ม Toggle UI ตัว G ขนาดกลาง ]===
+local toggleUIBtn = Instance.new("TextButton")
+toggleUIBtn.Size = UDim2.new(0,60,0,40) -- ขนาดกลาง
+toggleUIBtn.Position = UDim2.new(0.01,0,0.9,0) -- มุมล่างซ้าย
+toggleUIBtn.BackgroundColor3 = Color3.fromRGB(0,120,255)
+toggleUIBtn.TextColor3 = Color3.new(1,1,1)
+toggleUIBtn.Font = Enum.Font.SourceSansBold
+toggleUIBtn.TextSize = 24
+toggleUIBtn.Text = "G"
+toggleUIBtn.Parent = PlayerGui
+
+local uiVisible = true
+toggleUIBtn.MouseButton1Click:Connect(function()
+	uiVisible = not uiVisible
+	local gui = PlayerGui:FindFirstChild("FarmControlUI")
+	if gui then gui.Enabled = uiVisible end
+end)
+
+--===[ ฟังก์ชันอัปเดตปุ่ม ]===
+local function updateButton(button,state,onText,offText)
 	if state then
 		button.Text = onText
 		button.BackgroundColor3 = Color3.fromRGB(0,170,0)
@@ -83,6 +98,7 @@ toggleSlayer.MouseButton1Click:Connect(function()
 	updateButton(toggleSlayer,getgenv().AutoSlayerTrainee,"🟢 Auto Slayer's Trainee : ON","🔴 Auto Slayer's Trainee : OFF")
 end)
 
+--===[ AutoZoom ]===
 local autoZoomConn
 local function EnableAutoZoom(state)
 	getgenv().AutoZoom = state
@@ -95,38 +111,37 @@ local function EnableAutoZoom(state)
 			if not hrp then return end
 			camera.CameraType = Enum.CameraType.Scriptable
 			local zoom = math.min(player.CameraMaxZoomDistance or 128,100)
-			camera.CFrame = hrp.CFrame * CFrame.new(0, zoom, 0) * CFrame.Angles(math.rad(-90),0,0)
+			camera.CFrame = hrp.CFrame * CFrame.new(0,zoom,0) * CFrame.Angles(math.rad(-90),0,0)
 		end)
 	else
 		camera.CameraType = Enum.CameraType.Custom
 		if autoZoomConn then autoZoomConn:Disconnect() autoZoomConn=nil end
 	end
 end
-
 zoomButton.MouseButton1Click:Connect(function()
 	EnableAutoZoom(not getgenv().AutoZoom)
 end)
 
---===[ ปรับ ProximityPrompt ]===--
+--===[ ProximityPrompt ปรับ HoldDuration = 0 ]===
 for _,obj in pairs(workspace:GetDescendants()) do
 	if obj:IsA("ProximityPrompt") then obj.HoldDuration=0 end
 end
 
---===[ Haki Loop ]===--
+--===[ Haki Loop ]===
 local HakiArgs = {"Server","Misc","Haki",1}
 local function ActivateHaki()
 	pcall(function() Remotes:FireServer(unpack(HakiArgs)) end)
 end
 
 local function waitForCharacter()
-	local char, hrp, humanoid
+	local char,hrp,humanoid
 	repeat
 		char = player.Character or player.CharacterAdded:Wait()
 		hrp = char:FindFirstChild("HumanoidRootPart")
 		humanoid = char:FindFirstChild("Humanoid")
 		task.wait(0.1)
 	until hrp and humanoid and humanoid.Health>0
-	return char, hrp, humanoid
+	return char,hrp,humanoid
 end
 
 task.spawn(function()
@@ -137,13 +152,12 @@ task.spawn(function()
 	end
 end)
 
---===[ Attack Function ]===--
+--===[ Attack Function ]===
 local function AttackBoss(bossModel)
 	local char, hrp = waitForCharacter()
 	local Mon = bossModel:FindFirstChild("HumanoidRootPart")
 	local hum = bossModel:FindFirstChild("Humanoid")
 	if Mon and hum and hum.Health>0 then
-		-- วาร์ปเข้าหา + รักษาตำแหน่งไม่ให้เคลื่อน
 		hrp.CFrame = Mon.CFrame * CFrame.new(0,10,10)
 		for i=1,4 do
 			Remotes:FireServer("Server","Sword","Skill"..i,"Dual Dagger")
@@ -154,14 +168,14 @@ local function AttackBoss(bossModel)
 	return false
 end
 
---===[ ตรวจ SJW ทุก 10 วิ + วาร์ปกลับเควส Slayer ถ้าไม่เจอ ]===--
-local latestSJW = nil
+--===[ ตรวจ SJW ทุก 10 วิ ]===
+local latestSJW=nil
 task.spawn(function()
 	while true do
 		local sjwArea = workspace.Main.Characters:FindFirstChild("Rogue Town")
 		local sjwFolder = sjwArea and sjwArea:FindFirstChild("Boss")
 		local sjw = sjwFolder and sjwFolder:FindFirstChild("Sung Jin Woo")
-		local char, hrp = waitForCharacter()
+		local char,hrp = waitForCharacter()
 		if sjw and sjw:FindFirstChild("Humanoid") and sjw.Humanoid.Health>0 then
 			latestSJW = sjw
 		else
@@ -172,19 +186,17 @@ task.spawn(function()
 	end
 end)
 
---===[ AutoFarm Mihawk + SJW ]===--
+--===[ AutoFarm Mihawk + SJW ]===
 task.spawn(function()
 	while true do
 		if getgenv().AutoFarmMihawk and getgenv().gx then
 			pcall(function()
-				local char, hrp = waitForCharacter()
+				local char,hrp = waitForCharacter()
 				local mihawkArea = workspace.Main.Characters:FindFirstChild("Glacier Isle")
 				local mihawk = mihawkArea and mihawkArea:FindFirstChild("Mihawk") and mihawkArea.Mihawk:FindFirstChild("Mihawk")
 				local sjwBoss = latestSJW
-				if sjwBoss and sjwBoss:FindFirstChild("Humanoid") then
-					local hum = sjwBoss.Humanoid
-					if hum.Health>0 then AttackBoss(sjwBoss)
-					else hrp.CFrame = questPositionSlayer end
+				if sjwBoss and sjwBoss:FindFirstChild("Humanoid") and sjwBoss.Humanoid.Health>0 then
+					AttackBoss(sjwBoss)
 				elseif mihawk and mihawk:FindFirstChild("Humanoid") and mihawk.Humanoid.Health>0 then
 					AttackBoss(mihawk)
 				else
@@ -196,15 +208,15 @@ task.spawn(function()
 	end
 end)
 
---===[ AutoFarm Slayer's Trainee ]===--
+--===[ AutoFarm Slayer's Trainee ]===
 task.spawn(function()
 	while true do
 		if getgenv().AutoSlayerTrainee and getgenv().gx then
 			pcall(function()
-				local char, hrp = waitForCharacter()
+				local char,hrp = waitForCharacter()
 				local slayerArea = workspace.Main.Characters["Forge Isle"]:FindFirstChild("Slayer's Trainee")
 				if slayerArea then
-					for _, slayer in pairs(slayerArea:GetChildren()) do
+					for _,slayer in pairs(slayerArea:GetChildren()) do
 						if slayer.Name=="Slayer's Trainee" and slayer:FindFirstChild("Humanoid") and slayer.Humanoid.Health>0 then
 							AttackBoss(slayer)
 						end
