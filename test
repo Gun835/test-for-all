@@ -211,7 +211,27 @@ task.spawn(function()
 						end
 					end
 				end
-				-- ไม่ต้องวาปกลับจุดเควสตอนตี Slayer's Trainee
 			end)
 		end
-		task.wait(
+		task.wait(0.4)
+	end
+end)
+
+--===[ Loop AutoFarm Tanjiro ]===
+task.spawn(function()
+	while true do
+		if getgenv().AutoTanjiro and getgenv().gx then
+			pcall(function()
+				local char,hrp = waitForCharacter()
+				local tanjiroArea = workspace.Main.Characters["Forge Isle"].Boss
+				local tanjiro = tanjiroArea and tanjiroArea:FindFirstChild("Tanjiro")
+				if tanjiro and tanjiro:FindFirstChild("Humanoid") and tanjiro.Humanoid.Health>0 then
+					AttackBoss(tanjiro)
+				else
+					hrp.CFrame = questPositionTanjiro
+				end
+			end)
+		end
+		task.wait(0.4)
+	end
+end)
